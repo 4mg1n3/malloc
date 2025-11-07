@@ -29,7 +29,7 @@ void my_free(void *ptr)
         size_t bit = offset / page->block_size;
 
         if (bit < 64)
-            page->bitmap &= ~(1 << bit);
+            page->bitmap &= ~(1ULL << bit);
 
         if (page->bitmap == 0)
         {

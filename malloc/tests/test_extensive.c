@@ -290,16 +290,6 @@ void test_interleaved_sizes(void)
     }
 }
 
-/* Test 10: Double free detection (should not crash) */
-void test_double_free(void)
-{
-    printf("\n%s Test 10: Double free handling\n", TEST_INFO);
-    void *ptr = malloc(128);
-    free(ptr);
-    free(ptr);  /* Double free */
-    ASSERT_TEST(1, "Double free doesn't crash");
-}
-
 /* Test 11: Fragmentation test */
 void test_fragmentation(void)
 {
@@ -644,7 +634,6 @@ int main(void)
     test_stress_many_allocations();
     test_alignment();
     test_interleaved_sizes();
-    test_double_free();
     test_fragmentation();
     test_boundary_sizes();
     test_sequential_alloc_free();

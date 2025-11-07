@@ -114,10 +114,10 @@ void *my_malloc(size_t size)
     }
     page->bitmap |= (1ULL << bit);
 
-    void *vpage = page + 1;
+    void *vpage = page;
     unsigned char *data = vpage;
 
-    void *ptr = data + bit * page->block_size;
+    void *ptr = (data + sizeof(struct page_header)) + bit * page->block_size;
 
     pthread_mutex_unlock(&g_alloc.lock);
     return ptr;
