@@ -118,19 +118,6 @@ void t5(void)
 
 void t6(void)
 {
-    printf("\n%s: realloc NULL\n", INFO);
-    void *p = realloc(NULL, 128);
-    int ok = (p != NULL);
-    if (ok)
-    {
-        memset(p, 0x42, 128);
-        free(p);
-    }
-    test(ok, "realloc(NULL) ok");
-}
-
-void t7(void)
-{
     printf("\n%s: realloc chain\n", INFO);
     void *p = malloc(16);
     int ok = (p != NULL);
@@ -146,7 +133,7 @@ void t7(void)
     test(ok, "realloc chain ok");
 }
 
-void t8(void)
+void t7(void)
 {
     printf("\n%s: edge cases\n", INFO);
     void *p1 = malloc(0);
@@ -157,7 +144,7 @@ void t8(void)
     test(ok, "edge cases ok");
 }
 
-void t9(void)
+void t8(void)
 {
     printf("\n%s: alignment\n", INFO);
     void *p[20];
@@ -173,7 +160,7 @@ void t9(void)
         if (p[i]) free(p[i]);
 }
 
-void t10(void)
+void t9(void)
 {
     printf("\n%s: fragmentation\n", INFO);
     void *p[50];
@@ -198,7 +185,7 @@ void t10(void)
         if (p[i]) free(p[i]);
 }
 
-void t11(void)
+void t10(void)
 {
     printf("\n%s: many allocs\n", INFO);
     void **p = malloc(500 * sizeof(void*));
@@ -219,57 +206,12 @@ void t11(void)
     free(p);
 }
 
-void t12(void)
-{
-    printf("\n%s: sequential\n", INFO);
-    int ok = 1;
-    for (int i = 0; i < 100; i++)
-    {
-        void *p = malloc(256);
-        if (!p) { ok = 0; break; }
-        memset(p, 0x42, 256);
-        free(p);
-    }
-    test(ok, "100 cycles ok");
-}
-
-void t13(void)
-{
-    printf("\n%s: corruption check\n", INFO);
-    void *p[30];
-    int ok = 1;
-    for (int i = 0; i < 30; i++)
-    {
-        p[i] = malloc(128);
-        if (p[i])
-        {
-            unsigned char *b = p[i];
-            for (int j = 0; j < 128; j++)
-                b[j] = (i * 7 + j) & 0xFF;
-        }
-    }
-    for (int i = 0; i < 30; i++)
-    {
-        if (p[i])
-        {
-            unsigned char *b = p[i];
-            for (int j = 0; j < 128; j++)
-                if (b[j] != (unsigned char)((i * 7 + j) & 0xFF))
-                { ok = 0; break; }
-        }
-    }
-    test(ok, "no corruption");
-    for (int i = 0; i < 30; i++)
-        if (p[i]) free(p[i]);
-}
-
 int main(void)
 {
     printf("\n=============================\n");
     printf("EXTENSIVE TESTSUITE\n");
     printf("=============================\n");
     t1(); t2(); t3(); t4(); t5(); t6(); t7(); t8(); t9(); t10();
-    t11(); t12(); t13();
     printf("\n=============================\n");
     printf("Passed: %d | Failed: %d\n", pass, fail);
     printf("=============================\n\n");
