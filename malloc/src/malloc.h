@@ -1,5 +1,5 @@
-#ifndef INTERNAL_MALLOC_H
-#define INTERNAL_MALLOC_H
+#ifndef MALLOC_H
+#define MALLOC_H
 
 #include <pthread.h>
 #include <stddef.h>
@@ -12,9 +12,9 @@
 
 struct page_header
 {
+    uint64_t bitmap;
     size_t block_size;
     size_t blocks_per_page;
-    uint64_t bitmap;
     struct page_header *next;
 };
 
@@ -26,15 +26,12 @@ struct allocator_state
 
 extern struct allocator_state g_alloc;
 
-/* internal allocator functions */
 void *my_malloc(size_t size);
 void my_free(void *ptr);
 
-/* optional helpers for calloc/realloc */
 void *my_calloc(size_t nmemb, size_t size);
 void *my_realloc(void *ptr, size_t size);
 
-/* size query for realloc (returns usable bytes or 0) */
 size_t get_allocation_size(void *ptr);
 
-#endif
+#endif /* MALLOC_H */

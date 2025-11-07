@@ -3,17 +3,42 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+static size_t next_pow2(size_t n)
+{
+    if (n <= 16)
+        return 16;
+    if (n > 2048)
+        return n;
+    n--;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n |= n >> 32;
+    n++;
+    return n;
+}
+
+
 int main(void)
 {
-    size_t size = 4096;
+
+    printf("%zu\n", next_pow2(129));
+    size_t size = 16;
     void *ptr = malloc(size);
-    if (!ptr)
+    void *ptr2 = malloc(size);
+    void *ptr3 = malloc(size);
+    if (!ptr || !ptr2 || !ptr3)
     {
         printf("malloc(%zu) failed\n", size);
         return 1;
     }
 
     printf("malloc(%zu) returned %p\n", size, ptr);
+    printf("malloc(%zu) returned %p\n", size, ptr2);
+    printf("malloc(%zu) returned %p\n", size, ptr3);
 
     memset(ptr, 0xAB, size);
     unsigned char *bytes = ptr;
@@ -45,6 +70,8 @@ int main(void)
     printf("calloc memory is %sinitialized to zero\n", zero_ok ? "" : "NOT ");
 
     free(ptr);
+    free(ptr2);
+    free(ptr3);
     free(cptr);
     printf("Freed all blocks.\n");
     return 0;

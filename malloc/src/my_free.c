@@ -12,7 +12,7 @@ void my_free(void *ptr)
 
     while (page)
     {
-        void *page_start = page + 1;
+        void *page_start = page;
         void *page_end =
             (char *)page_start + page->block_size * page->blocks_per_page;
 
