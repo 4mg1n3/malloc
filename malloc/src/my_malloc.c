@@ -102,12 +102,12 @@ void *my_malloc(size_t size)
             break;
         }
     }
-    void *vpage = page;
-    char *endofpage = vpage;
-    endofpage += 4096;
-    endofpage -= (page->blocks_per_page + 1 - bit) * (page->block_size);
+    void *vpage = page + 1;
+    unsigned char *data = vpage;
 
-    void *ptr = endofpage;
+
+
+    void *ptr = data + bit * page->block_size;
 
     pthread_mutex_unlock(&g_alloc.lock);
     return ptr;
