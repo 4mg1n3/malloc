@@ -17,3 +17,13 @@ check:
 
 clean:
 	$(RM) $(OBJS) $(NAME)
+debug: CFLAGS += -g -O0 -fsanitize=address -fsanitize=leak
+debug: LDFLAGS += -fsanitize=address -fsanitize=leak
+debug: clean library
+	@echo "Built with AddressSanitizer and LeakSanitizer"
+
+memcheck: debug
+	@echo "Running memory leak check..."
+	LD_PRELOAD=./$(NAME) ./tests/test_basic
+	@echo ""
+	LD_PRELOAD=./$(NAME) ./tests/test_extensive

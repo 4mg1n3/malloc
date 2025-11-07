@@ -22,16 +22,16 @@ static int tests_failed = 0;
     } \
 } while(0)
 
-/* Test 1: Allocate 64 pointers of size 64 */
+/* Test 1: Allocate 128 pointers of size 16 to test both bitmaps */
 void test_64_allocations_size_64(void)
 {
-    printf("\n%s Test 1: Allocating 64 pointers of size 64\n", TEST_INFO);
+    printf("\n%s Test 1: Allocating 128 pointers of size 16 (dual bitmap test)\n", TEST_INFO);
     void *ptrs[128];
     int success = 1;
     
     for (int i = 0; i < 128; i++)
     {
-        ptrs[i] = malloc(32);
+        ptrs[i] = malloc(16);
         if (!ptrs[i])
         {
             printf("  Allocation %d failed\n", i);
@@ -39,27 +39,28 @@ void test_64_allocations_size_64(void)
             break;
         }
         /* Write unique pattern to each block */
-        memset(ptrs[i], i & 0xF, 32);
+        memset(ptrs[i], i & 0xFF, 16);
     }
     
-    ASSERT_TEST(success, "All 64 allocations succeeded");
+    ASSERT_TEST(success, "All 128 allocations succeeded");
     
     /* Verify data integrity */
     int data_ok = 1;
     for (int i = 0; i < 128 && ptrs[i]; i++)
     {
         unsigned char *bytes = ptrs[i];
-        for (int j = 0; j < 128; j++)
+        for (int j = 0; j < 16; j++)
         {
-            if (bytes[j] != (unsigned char)(i & 0xF))
+            if (bytes[j] != (unsigned char)(i & 0xFF))
             {
                 data_ok = 0;
+                printf("  Data corruption in block %d at offset %d\n", i, j);
                 break;
             }
         }
     }
     
-    ASSERT_TEST(data_ok, "Data integrity maintained across all 64 blocks");
+    ASSERT_TEST(data_ok, "Data integrity maintained across all 128 blocks");
     
     /* Free all */
     for (int i = 0; i < 128; i++)
@@ -68,7 +69,7 @@ void test_64_allocations_size_64(void)
             free(ptrs[i]);
     }
     
-    printf("  Freed all 64 blocks\n");
+    printf("  Freed all 128 blocks\n");
 }
 
 /* Test 2: Various small sizes */
