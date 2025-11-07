@@ -25,7 +25,7 @@ static size_t next_pow2(size_t n)
 int main(void)
 {
 
-    printf("%zu\n", next_pow2(129));
+    printf("%zu\n\n", next_pow2(129));
     size_t size = 64;
     void *ptr = malloc(size);
     void *ptr2 = malloc(size);

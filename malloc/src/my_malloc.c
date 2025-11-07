@@ -2,6 +2,13 @@
 
 struct allocator_state g_alloc = { NULL, PTHREAD_MUTEX_INITIALIZER };
 
+static uint64_t pf_mask(const struct page_header *page)
+{
+    if (page->blocks_per_page >= 64)
+        return UINT64_MAX;
+    return (1ULL << page->blocks_per_page) - 1ULL;
+}
+
 static size_t next_pow2(size_t n)
 {
     if (n <= 16)
@@ -79,8 +86,12 @@ void *my_malloc(size_t size)
     struct page_header *page = g_alloc.pages;
     while (page)
     {
-        if (page->block_size == block_size && page->bitmap != UINT64_MAX)
-            break;
+        if (page->block_size == block_size)
+        {
+            uint64_t mask = pf_mask(page);
+            if ((page->bitmap & mask) != mask)
+                break;
+        }
         page = page->next;
     }
 
@@ -94,15 +105,15 @@ void *my_malloc(size_t size)
         }
     }
 
-    size_t bit;
-    for (bit = 0; bit < page->blocks_per_page; bit++)
+    unsigned bit = 0;
+    while (bit < page->blocks_per_page)
     {
         if (!(page->bitmap & (1ULL << bit)))
-        {
-            page->bitmap |= (1ULL << bit);
             break;
-        }
+        bit++;
     }
+    page->bitmap |= (1ULL << bit);
+
     void *vpage = page + 1;
     unsigned char *data = vpage;
 
