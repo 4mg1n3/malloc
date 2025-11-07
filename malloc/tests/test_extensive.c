@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <stdint.h>
 
 #define PASS "\033[32m[PASS]\033[0m"
 #define FAIL "\033[31m[FAIL]\033[0m"
@@ -88,6 +86,7 @@ void t4(void)
     printf("\n%s T4: zero size\n", INFO);
     void *p = malloc(0);
     test(p == NULL, "malloc(0) = NULL");
+    printf("%p\n", p);
 }
 
 void t5(void)
@@ -237,7 +236,7 @@ void t13(void)
     printf("\n%s T13: mixed stress\n", INFO);
     void *p[200];
     int ok = 1;
-    srand(time(NULL));
+    srand(42);
     for (int i = 0; i < 200; i++)
     {
         size_t sz = (rand() % 2000) + 1;
