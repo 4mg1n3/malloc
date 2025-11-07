@@ -97,16 +97,14 @@ void *my_malloc(size_t size)
     size_t bit;
     for (bit = 0; bit < page->blocks_per_page; bit++)
     {
-        if (!(page->bitmap & (1 << bit)))
+        if (!(page->bitmap & (1ULL << bit)))
         {
-            page->bitmap |= (1 << bit);
+            page->bitmap |= (1ULL << bit);
             break;
         }
     }
     void *vpage = page + 1;
     unsigned char *data = vpage;
-
-
 
     void *ptr = data + bit * page->block_size;
 

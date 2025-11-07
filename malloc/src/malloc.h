@@ -16,6 +16,7 @@ struct page_header
     size_t block_size;
     size_t blocks_per_page;
     struct page_header *next;
+    char padd[4];
 };
 
 struct allocator_state
