@@ -1,9 +1,9 @@
-#include "../src/malloc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <time.h>
+#include <stdint.h>
 
 #define TEST_PASS "\033[32m[PASS]\033[0m"
 #define TEST_FAIL "\033[31m[FAIL]\033[0m"
@@ -31,7 +31,7 @@ void test_64_allocations_size_64(void)
     
     for (int i = 0; i < 64; i++)
     {
-        ptrs[i] = my_malloc(64);
+        ptrs[i] = malloc(64);
         if (!ptrs[i])
         {
             printf("  Allocation %d failed\n", i);
@@ -65,7 +65,7 @@ void test_64_allocations_size_64(void)
     for (int i = 0; i < 64; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
     
     printf("  Freed all 64 blocks\n");
@@ -81,7 +81,7 @@ void test_small_sizes(void)
     
     for (int i = 0; i < 11; i++)
     {
-        ptrs[i] = my_malloc(sizes[i]);
+        ptrs[i] = malloc(sizes[i]);
         if (!ptrs[i])
         {
             printf("  Allocation of size %zu failed\n", sizes[i]);
@@ -98,7 +98,7 @@ void test_small_sizes(void)
     for (int i = 0; i < 11; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
@@ -112,7 +112,7 @@ void test_large_allocations(void)
     
     for (int i = 0; i < 6; i++)
     {
-        ptrs[i] = my_malloc(sizes[i]);
+        ptrs[i] = malloc(sizes[i]);
         if (!ptrs[i])
         {
             printf("  Large allocation of size %zu failed\n", sizes[i]);
@@ -130,7 +130,7 @@ void test_large_allocations(void)
     for (int i = 0; i < 6; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
@@ -138,7 +138,7 @@ void test_large_allocations(void)
 void test_zero_size(void)
 {
     printf("\n%s Test 4: Zero size allocation\n", TEST_INFO);
-    void *ptr = my_malloc(0);
+    void *ptr = malloc(0);
     ASSERT_TEST(ptr == NULL, "malloc(0) returns NULL");
 }
 
@@ -146,7 +146,7 @@ void test_zero_size(void)
 void test_free_null(void)
 {
     printf("\n%s Test 5: Free NULL pointer\n", TEST_INFO);
-    my_free(NULL);
+    free(NULL);
     ASSERT_TEST(1, "free(NULL) doesn't crash");
 }
 
@@ -159,7 +159,7 @@ void test_alloc_free_realloc(void)
     /* Allocate */
     for (int i = 0; i < 10; i++)
     {
-        ptrs[i] = my_malloc(128);
+        ptrs[i] = malloc(128);
         if (ptrs[i])
             memset(ptrs[i], i, 128);
     }
@@ -167,7 +167,7 @@ void test_alloc_free_realloc(void)
     /* Free odd indices */
     for (int i = 1; i < 10; i += 2)
     {
-        my_free(ptrs[i]);
+        free(ptrs[i]);
         ptrs[i] = NULL;
     }
     
@@ -175,7 +175,7 @@ void test_alloc_free_realloc(void)
     int success = 1;
     for (int i = 1; i < 10; i += 2)
     {
-        ptrs[i] = my_malloc(128);
+        ptrs[i] = malloc(128);
         if (!ptrs[i])
             success = 0;
     }
@@ -186,7 +186,7 @@ void test_alloc_free_realloc(void)
     for (int i = 0; i < 10; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
@@ -201,7 +201,7 @@ void test_stress_many_allocations(void)
     for (int i = 0; i < 1000; i++)
     {
         size_t size = (i % 512) + 1;
-        ptrs[i] = my_malloc(size);
+        ptrs[i] = malloc(size);
         if (ptrs[i])
         {
             alloc_count++;
@@ -219,7 +219,7 @@ void test_stress_many_allocations(void)
     for (int i = 0; i < 1000; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
     
     free(ptrs);
@@ -234,7 +234,7 @@ void test_alignment(void)
     
     for (int i = 0; i < 20; i++)
     {
-        ptrs[i] = my_malloc(64);
+        ptrs[i] = malloc(64);
         if (ptrs[i])
         {
             uintptr_t addr = (uintptr_t)ptrs[i];
@@ -251,7 +251,7 @@ void test_alignment(void)
     for (int i = 0; i < 20; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
@@ -274,7 +274,7 @@ void test_interleaved_sizes(void)
         else
             size = 512;
             
-        ptrs[i] = my_malloc(size);
+        ptrs[i] = malloc(size);
         if (!ptrs[i])
             success = 0;
         else
@@ -286,7 +286,7 @@ void test_interleaved_sizes(void)
     for (int i = 0; i < 100; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
@@ -294,9 +294,9 @@ void test_interleaved_sizes(void)
 void test_double_free(void)
 {
     printf("\n%s Test 10: Double free handling\n", TEST_INFO);
-    void *ptr = my_malloc(128);
-    my_free(ptr);
-    my_free(ptr);  /* Double free */
+    void *ptr = malloc(128);
+    free(ptr);
+    free(ptr);  /* Double free */
     ASSERT_TEST(1, "Double free doesn't crash");
 }
 
@@ -309,7 +309,7 @@ void test_fragmentation(void)
     /* Allocate 50 blocks */
     for (int i = 0; i < 50; i++)
     {
-        ptrs[i] = my_malloc(64);
+        ptrs[i] = malloc(64);
         if (ptrs[i])
             memset(ptrs[i], i, 64);
     }
@@ -317,7 +317,7 @@ void test_fragmentation(void)
     /* Free every other block */
     for (int i = 0; i < 50; i += 2)
     {
-        my_free(ptrs[i]);
+        free(ptrs[i]);
         ptrs[i] = NULL;
     }
     
@@ -325,7 +325,7 @@ void test_fragmentation(void)
     int realloc_success = 1;
     for (int i = 0; i < 50; i += 2)
     {
-        ptrs[i] = my_malloc(64);
+        ptrs[i] = malloc(64);
         if (!ptrs[i])
             realloc_success = 0;
     }
@@ -335,7 +335,7 @@ void test_fragmentation(void)
     for (int i = 0; i < 50; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
@@ -350,7 +350,7 @@ void test_boundary_sizes(void)
     
     for (int i = 0; i < 15; i++)
     {
-        ptrs[i] = my_malloc(sizes[i]);
+        ptrs[i] = malloc(sizes[i]);
         if (!ptrs[i])
         {
             printf("  Boundary size %zu failed\n", sizes[i]);
@@ -367,7 +367,7 @@ void test_boundary_sizes(void)
     for (int i = 0; i < 15; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
@@ -379,14 +379,14 @@ void test_sequential_alloc_free(void)
     
     for (int i = 0; i < 100; i++)
     {
-        void *ptr = my_malloc(256);
+        void *ptr = malloc(256);
         if (!ptr)
         {
             success = 0;
             break;
         }
         memset(ptr, i & 0xFF, 256);
-        my_free(ptr);
+        free(ptr);
     }
     
     ASSERT_TEST(success, "100 sequential alloc/free cycles succeeded");
@@ -404,7 +404,7 @@ void test_mixed_size_stress(void)
     for (int i = 0; i < 200; i++)
     {
         size_t size = (rand() % 2000) + 1;
-        ptrs[i] = my_malloc(size);
+        ptrs[i] = malloc(size);
         if (!ptrs[i])
         {
             success = 0;
@@ -423,7 +423,7 @@ void test_mixed_size_stress(void)
         int idx = rand() % 200;
         if (ptrs[idx])
         {
-            my_free(ptrs[idx]);
+            free(ptrs[idx]);
             ptrs[idx] = NULL;
         }
     }
@@ -432,7 +432,7 @@ void test_mixed_size_stress(void)
     for (int i = 0; i < 200; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
@@ -448,7 +448,7 @@ void test_page_boundary(void)
     
     for (int i = 0; i < 10; i++)
     {
-        ptrs[i] = my_malloc(sizes[i]);
+        ptrs[i] = malloc(sizes[i]);
         if (!ptrs[i])
         {
             printf("  Page boundary size %zu failed\n", sizes[i]);
@@ -465,7 +465,7 @@ void test_page_boundary(void)
     for (int i = 0; i < 10; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
@@ -479,7 +479,7 @@ void test_no_corruption(void)
     /* Allocate and write unique patterns */
     for (int i = 0; i < 30; i++)
     {
-        ptrs[i] = my_malloc(128);
+        ptrs[i] = malloc(128);
         if (ptrs[i])
         {
             unsigned char *bytes = ptrs[i];
@@ -513,7 +513,7 @@ void test_no_corruption(void)
     for (int i = 0; i < 30; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
@@ -527,7 +527,7 @@ void test_power_of_2_sizes(void)
     for (int i = 0; i < 12; i++)
     {
         size_t size = 1 << i;  /* 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 */
-        ptrs[i] = my_malloc(size);
+        ptrs[i] = malloc(size);
         if (!ptrs[i])
         {
             printf("  Power of 2 size %zu failed\n", size);
@@ -544,7 +544,7 @@ void test_power_of_2_sizes(void)
     for (int i = 0; i < 12; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
@@ -557,22 +557,22 @@ void test_alternating_alloc_free(void)
     
     for (int i = 0; i < 50; i++)
     {
-        ptr1 = my_malloc(64);
-        ptr2 = my_malloc(128);
+        ptr1 = malloc(64);
+        ptr2 = malloc(128);
         
         if (!ptr1 || !ptr2)
         {
             success = 0;
-            if (ptr1) my_free(ptr1);
-            if (ptr2) my_free(ptr2);
+            if (ptr1) free(ptr1);
+            if (ptr2) free(ptr2);
             break;
         }
         
         memset(ptr1, 0xAA, 64);
         memset(ptr2, 0xBB, 128);
         
-        my_free(ptr1);
-        my_free(ptr2);
+        free(ptr1);
+        free(ptr2);
     }
     
     ASSERT_TEST(success, "50 alternating alloc/free cycles succeeded");
@@ -583,7 +583,7 @@ void test_very_large_allocation(void)
 {
     printf("\n%s Test 19: Very large allocation (10MB)\n", TEST_INFO);
     size_t large_size = 10 * 1024 * 1024;
-    void *ptr = my_malloc(large_size);
+    void *ptr = malloc(large_size);
     
     int success = (ptr != NULL);
     if (success)
@@ -594,7 +594,7 @@ void test_very_large_allocation(void)
         bytes[large_size - 1] = 0xFF;
         
         success = (bytes[0] == 0xFF && bytes[large_size - 1] == 0xFF);
-        my_free(ptr);
+        free(ptr);
     }
     
     ASSERT_TEST(success, "10MB allocation succeeded and accessible");
@@ -609,7 +609,7 @@ void test_multiple_pages_64(void)
     
     for (int i = 0; i < 128; i++)
     {
-        ptrs[i] = my_malloc(64);
+        ptrs[i] = malloc(64);
         if (!ptrs[i])
         {
             printf("  Allocation %d failed\n", i);
@@ -624,7 +624,7 @@ void test_multiple_pages_64(void)
     for (int i = 0; i < 128; i++)
     {
         if (ptrs[i])
-            my_free(ptrs[i]);
+            free(ptrs[i]);
     }
 }
 
