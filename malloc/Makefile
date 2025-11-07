@@ -17,13 +17,18 @@ check:
 
 clean:
 	$(RM) $(OBJS) $(NAME)
-debug: CFLAGS += -g -O0 -fsanitize=address -fsanitize=leak
-debug: LDFLAGS += -fsanitize=address -fsanitize=leak
+debug: CFLAGS += -g -O0
 debug: clean library
-	@echo "Built with AddressSanitizer and LeakSanitizer"
+	@echo "Built with debug symbols"
 
 memcheck: debug
-	@echo "Running memory leak check..."
-	LD_PRELOAD=./$(NAME) ./tests/test_basic
+	@echo "Running memory leak check with Valgrind..."
+	@echo "=== Testing test_basic ==="
+	LD_PRELOAD=./$(NAME) valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./tests/test_basic
 	@echo ""
-	LD_PRELOAD=./$(NAME) ./tests/test_extensive
+	@echo "=== Testing test_extensive ==="
+	LD_PRELOAD=./$(NAME) valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./tests/test_extensive
+
+memcheck-quick: debug
+	@echo "Running quick memory check..."
+	LD_PRELOAD=./$(NAME) valgrind --leak-check=yes ./tests/test_basic
