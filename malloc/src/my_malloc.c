@@ -49,7 +49,8 @@ static void *alloc_big(size_t size)
     if (pagesize <= 0)
         pagesize = 4096;
 
-    size_t aligned = (size + pagesize - 1) & ~(pagesize - 1);
+    size_t tot = size + sizeof(size_t);
+    size_t aligned = (tot + pagesize - 1) & ~(pagesize - 1);
 
     void *mem = mmap(NULL, aligned, PROT_READ | PROT_WRITE,
                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
