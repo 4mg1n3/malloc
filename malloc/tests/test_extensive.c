@@ -1,625 +1,393 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <time.h>
 #include <stdint.h>
 
-#define TEST_PASS "\033[32m[PASS]\033[0m"
-#define TEST_FAIL "\033[31m[FAIL]\033[0m"
-#define TEST_INFO "\033[34m[INFO]\033[0m"
+#define PASS "\033[32m[PASS]\033[0m"
+#define FAIL "\033[31m[FAIL]\033[0m"
+#define INFO "\033[34m[INFO]\033[0m"
 
-static int tests_passed = 0;
-static int tests_failed = 0;
+static int pass = 0;
+static int fail = 0;
 
-#define ASSERT_TEST(condition, test_name) do { \
-    if (condition) { \
-        printf("%s %s\n", TEST_PASS, test_name); \
-        tests_passed++; \
-    } else { \
-        printf("%s %s\n", TEST_FAIL, test_name); \
-        tests_failed++; \
-    } \
-} while(0)
-
-void test_64_allocations_size_64(void)
+static void test(int cond, const char *name)
 {
-    printf("\n%s Test 1: Allocating 128 pointers of size 16 (dual bitmap test)\n", TEST_INFO);
-    void *ptrs[128];
-    int success = 1;
+    if (cond)
+    {
+        printf("%s %s\n", PASS, name);
+        pass++;
+    }
+    else
+    {
+        printf("%s %s\n", FAIL, name);
+        fail++;
+    }
+}
+
+void t1(void)
+{
+    printf("\n%s T1: 128x16 dual bitmap\n", INFO);
+    void *p[128];
+    int ok = 1;
     for (int i = 0; i < 128; i++)
     {
-        ptrs[i] = malloc(16);
-        if (!ptrs[i])
-        {
-            printf("  Allocation %d failed\n", i);
-            success = 0;
-            break;
-        }
-        memset(ptrs[i], i & 0xFF, 16);
+        p[i] = malloc(16);
+        if (!p[i]) { ok = 0; break; }
+        memset(p[i], 0x42, 16);
     }
-    ASSERT_TEST(success, "All 128 allocations succeeded");
-    int data_ok = 1;
-    for (int i = 0; i < 128 && ptrs[i]; i++)
+    test(ok, "128 allocs ok");
+    ok = 1;
+    for (int i = 0; i < 128 && p[i]; i++)
     {
-        unsigned char *bytes = ptrs[i];
+        unsigned char *b = p[i];
         for (int j = 0; j < 16; j++)
-        {
-            if (bytes[j] != (unsigned char)(i & 0xFF))
-            {
-                data_ok = 0;
-                printf("  Data corruption in block %d at offset %d\n", i, j);
-                break;
-            }
-        }
+            if (b[j] != 0x42) { ok = 0; break; }
     }
-    
-    ASSERT_TEST(data_ok, "Data integrity maintained across all 128 blocks");
-    
-    /* Free all */
+    test(ok, "data ok");
     for (int i = 0; i < 128; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
-    
-    printf("  Freed all 128 blocks\n");
+        if (p[i]) free(p[i]);
 }
 
-/* Test 2: Various small sizes */
-void test_small_sizes(void)
+void t2(void)
 {
-    printf("\n%s Test 2: Small size allocations\n", TEST_INFO);
-    size_t sizes[] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
-    void *ptrs[11];
-    int success = 1;
-    
+    printf("\n%s T2: small sizes\n", INFO);
+    size_t sz[] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
+    void *p[11];
+    int ok = 1;
     for (int i = 0; i < 11; i++)
     {
-        ptrs[i] = malloc(sizes[i]);
-        if (!ptrs[i])
-        {
-            printf("  Allocation of size %zu failed\n", sizes[i]);
-            success = 0;
-        }
-        else
-        {
-            memset(ptrs[i], 0xAA, sizes[i]);
-        }
+        p[i] = malloc(sz[i]);
+        if (!p[i]) ok = 0;
+        else memset(p[i], 0x42, sz[i]);
     }
-    ASSERT_TEST(success, "All small size allocations succeeded");
+    test(ok, "small sizes ok");
     for (int i = 0; i < 11; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
-void test_large_allocations(void)
+void t3(void)
 {
-    printf("\n%s Test 3: Large allocations (>1024 bytes)\n", TEST_INFO);
-    size_t sizes[] = {2048, 4096, 8192, 16384, 65536, 1024*1024};
-    void *ptrs[6];
-    int success = 1;
+    printf("\n%s T3: large allocs\n", INFO);
+    size_t sz[] = {2048, 4096, 8192, 16384, 65536, 1024*1024};
+    void *p[6];
+    int ok = 1;
     for (int i = 0; i < 6; i++)
     {
-        ptrs[i] = malloc(sizes[i]);
-        if (!ptrs[i])
-        {
-            printf("  Large allocation of size %zu failed\n", sizes[i]);
-            success = 0;
-        }
-        else
-        {
-            memset(ptrs[i], 0x42, sizes[i]);
-        }
+        p[i] = malloc(sz[i]);
+        if (!p[i]) ok = 0;
+        else memset(p[i], 0x42, sz[i]);
     }
-    ASSERT_TEST(success, "All large allocations succeeded");
+    test(ok, "large allocs ok");
     for (int i = 0; i < 6; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
-void test_free_null(void)
+void t4(void)
 {
-    printf("\n%s Test 5: Free NULL pointer\n", TEST_INFO);
+    printf("\n%s T4: zero size\n", INFO);
+    void *p = malloc(0);
+    test(p == NULL, "malloc(0) = NULL");
+}
+
+void t5(void)
+{
+    printf("\n%s T5: free NULL\n", INFO);
     free(NULL);
-    ASSERT_TEST(1, "free(NULL) doesn't crash");
+    test(1, "free(NULL) ok");
 }
 
-void test_alloc_free_realloc(void)
+void t6(void)
 {
-    printf("\n%s Test 6: Allocate-Free-Reallocate pattern\n", TEST_INFO);
-    void *ptrs[10];
+    printf("\n%s T6: alloc-free-realloc\n", INFO);
+    void *p[10];
     for (int i = 0; i < 10; i++)
     {
-        ptrs[i] = malloc(128);
-        if (ptrs[i])
-            memset(ptrs[i], i, 128);
+        p[i] = malloc(128);
+        if (p[i]) memset(p[i], 0x42, 128);
     }
     for (int i = 1; i < 10; i += 2)
     {
-        free(ptrs[i]);
-        ptrs[i] = NULL;
+        free(p[i]);
+        p[i] = NULL;
     }
-    int success = 1;
+    int ok = 1;
     for (int i = 1; i < 10; i += 2)
     {
-        ptrs[i] = malloc(128);
-        if (!ptrs[i])
-            success = 0;
+        p[i] = malloc(128);
+        if (!p[i]) ok = 0;
     }
-    ASSERT_TEST(success, "Reallocations after partial free succeeded");
+    test(ok, "realloc ok");
     for (int i = 0; i < 10; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
-void test_stress_many_allocations(void)
+void t7(void)
 {
-    printf("\n%s Test 7: Stress test - 1000 allocations\n", TEST_INFO);
-    void **ptrs = malloc(1000 * sizeof(void*));
-    int success = 1;
-    int alloc_count = 0;
-    
+    printf("\n%s T7: 1000 allocs\n", INFO);
+    void **p = malloc(1000 * sizeof(void*));
+    int cnt = 0;
     for (int i = 0; i < 1000; i++)
     {
-        size_t size = (i % 512) + 1;
-        ptrs[i] = malloc(size);
-        if (ptrs[i])
+        size_t sz = (i % 512) + 1;
+        p[i] = malloc(sz);
+        if (p[i])
         {
-            alloc_count++;
-            memset(ptrs[i], i & 0xFF, size);
-        }
-        else
-        {
-            success = 0;
+            cnt++;
+            memset(p[i], 0x42, sz);
         }
     }
-    
-    printf("  Successfully allocated %d/1000 blocks\n", alloc_count);
-    ASSERT_TEST(alloc_count > 900, "Most allocations succeeded (>90%)");
-    
+    test(cnt > 900, "1000 allocs >90%");
     for (int i = 0; i < 1000; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
-    
-    free(ptrs);
+        if (p[i]) free(p[i]);
+    free(p);
 }
 
-/* Test 8: Alignment test */
-void test_alignment(void)
+void t8(void)
 {
-    printf("\n%s Test 8: Pointer alignment\n", TEST_INFO);
-    void *ptrs[20];
-    int all_aligned = 1;
-    
+    printf("\n%s T8: alignment\n", INFO);
+    void *p[20];
+    int ok = 1;
     for (int i = 0; i < 20; i++)
     {
-        ptrs[i] = malloc(64);
-        if (ptrs[i])
-        {
-            uintptr_t addr = (uintptr_t)ptrs[i];
-            if (addr % 16 != 0)
-            {
-                printf("  Pointer %p not aligned to 16 bytes\n", ptrs[i]);
-                all_aligned = 0;
-            }
-        }
+        p[i] = malloc(64);
+        if (p[i] && ((uintptr_t)p[i] % 16 != 0))
+            ok = 0;
     }
-    
-    ASSERT_TEST(all_aligned, "All pointers properly aligned");
-    
+    test(ok, "aligned");
     for (int i = 0; i < 20; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
-/* Test 9: Interleaved allocation sizes */
-void test_interleaved_sizes(void)
+void t9(void)
 {
-    printf("\n%s Test 9: Interleaved allocation sizes\n", TEST_INFO);
-    void *ptrs[100];
-    int success = 1;
-    
+    printf("\n%s T9: interleaved sizes\n", INFO);
+    void *p[100];
+    int ok = 1;
     for (int i = 0; i < 100; i++)
     {
-        size_t size;
-        if (i % 4 == 0)
-            size = 64;
-        else if (i % 4 == 1)
-            size = 128;
-        else if (i % 4 == 2)
-            size = 256;
-        else
-            size = 512;
-            
-        ptrs[i] = malloc(size);
-        if (!ptrs[i])
-            success = 0;
-        else
-            memset(ptrs[i], i & 0xFF, size);
+        size_t sz = (i % 4 == 0) ? 64 : (i % 4 == 1) ? 128 : (i % 4 == 2) ? 256 : 512;
+        p[i] = malloc(sz);
+        if (!p[i]) ok = 0;
+        else memset(p[i], 0x42, sz);
     }
-    
-    ASSERT_TEST(success, "Interleaved size allocations succeeded");
-    
+    test(ok, "interleaved ok");
     for (int i = 0; i < 100; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
-/* Test 11: Fragmentation test */
-void test_fragmentation(void)
+void t10(void)
 {
-    printf("\n%s Test 11: Fragmentation handling\n", TEST_INFO);
-    void *ptrs[50];
-    
-    /* Allocate 50 blocks */
+    printf("\n%s T10: fragmentation\n", INFO);
+    void *p[50];
     for (int i = 0; i < 50; i++)
     {
-        ptrs[i] = malloc(64);
-        if (ptrs[i])
-            memset(ptrs[i], i, 64);
+        p[i] = malloc(64);
+        if (p[i]) memset(p[i], 0x42, 64);
     }
-    
-    /* Free every other block */
     for (int i = 0; i < 50; i += 2)
     {
-        free(ptrs[i]);
-        ptrs[i] = NULL;
+        free(p[i]);
+        p[i] = NULL;
     }
-    
-    /* Try to allocate in the gaps */
-    int realloc_success = 1;
+    int ok = 1;
     for (int i = 0; i < 50; i += 2)
     {
-        ptrs[i] = malloc(64);
-        if (!ptrs[i])
-            realloc_success = 0;
+        p[i] = malloc(64);
+        if (!p[i]) ok = 0;
     }
-    
-    ASSERT_TEST(realloc_success, "Fragmented space reused successfully");
-    
+    test(ok, "reuse ok");
     for (int i = 0; i < 50; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
-/* Test 12: Boundary sizes */
-void test_boundary_sizes(void)
+void t11(void)
 {
-    printf("\n%s Test 12: Boundary size allocations\n", TEST_INFO);
-    size_t sizes[] = {15, 16, 17, 63, 64, 65, 127, 128, 129, 
-                      1023, 1024, 1025, 2047, 2048, 2049};
-    void *ptrs[15];
-    int success = 1;
-    
+    printf("\n%s T11: boundary sizes\n", INFO);
+    size_t sz[] = {15, 16, 17, 63, 64, 65, 127, 128, 129, 1023, 1024, 1025, 2047, 2048, 2049};
+    void *p[15];
+    int ok = 1;
     for (int i = 0; i < 15; i++)
     {
-        ptrs[i] = malloc(sizes[i]);
-        if (!ptrs[i])
-        {
-            printf("  Boundary size %zu failed\n", sizes[i]);
-            success = 0;
-        }
-        else
-        {
-            memset(ptrs[i], 0xCC, sizes[i]);
-        }
+        p[i] = malloc(sz[i]);
+        if (!p[i]) ok = 0;
+        else memset(p[i], 0x42, sz[i]);
     }
-    
-    ASSERT_TEST(success, "All boundary size allocations succeeded");
-    
+    test(ok, "boundary ok");
     for (int i = 0; i < 15; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
-/* Test 13: Sequential allocation and free */
-void test_sequential_alloc_free(void)
+void t12(void)
 {
-    printf("\n%s Test 13: Sequential allocate and free\n", TEST_INFO);
-    int success = 1;
-    
+    printf("\n%s T12: sequential\n", INFO);
+    int ok = 1;
     for (int i = 0; i < 100; i++)
     {
-        void *ptr = malloc(256);
-        if (!ptr)
-        {
-            success = 0;
-            break;
-        }
-        memset(ptr, i & 0xFF, 256);
-        free(ptr);
+        void *p = malloc(256);
+        if (!p) { ok = 0; break; }
+        memset(p, 0x42, 256);
+        free(p);
     }
-    
-    ASSERT_TEST(success, "100 sequential alloc/free cycles succeeded");
+    test(ok, "100 cycles ok");
 }
 
-/* Test 14: Mixed size stress test */
-void test_mixed_size_stress(void)
+void t13(void)
 {
-    printf("\n%s Test 14: Mixed size stress test\n", TEST_INFO);
-    void *ptrs[200];
-    int success = 1;
-    
+    printf("\n%s T13: mixed stress\n", INFO);
+    void *p[200];
+    int ok = 1;
     srand(time(NULL));
-    
     for (int i = 0; i < 200; i++)
     {
-        size_t size = (rand() % 2000) + 1;
-        ptrs[i] = malloc(size);
-        if (!ptrs[i])
-        {
-            success = 0;
-        }
-        else
-        {
-            memset(ptrs[i], i & 0xFF, size);
-        }
+        size_t sz = (rand() % 2000) + 1;
+        p[i] = malloc(sz);
+        if (!p[i]) ok = 0;
+        else memset(p[i], 0x42, sz);
     }
-    
-    ASSERT_TEST(success, "200 random size allocations succeeded");
-    
-    /* Free in random order */
+    test(ok, "200 random ok");
     for (int i = 0; i < 200; i++)
     {
         int idx = rand() % 200;
-        if (ptrs[idx])
-        {
-            free(ptrs[idx]);
-            ptrs[idx] = NULL;
-        }
+        if (p[idx]) { free(p[idx]); p[idx] = NULL; }
     }
-    
-    /* Clean up remaining */
     for (int i = 0; i < 200; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
-/* Test 15: Page boundary test */
-void test_page_boundary(void)
+void t14(void)
 {
-    printf("\n%s Test 15: Page boundary allocations\n", TEST_INFO);
-    void *ptrs[10];
-    int success = 1;
-    
-    /* Allocate sizes around page boundaries */
-    size_t sizes[] = {4090, 4094, 4095, 4096, 4097, 8190, 8192, 8194, 16384, 32768};
-    
+    printf("\n%s T14: page boundary\n", INFO);
+    void *p[10];
+    size_t sz[] = {4090, 4094, 4095, 4096, 4097, 8190, 8192, 8194, 16384, 32768};
+    int ok = 1;
     for (int i = 0; i < 10; i++)
     {
-        ptrs[i] = malloc(sizes[i]);
-        if (!ptrs[i])
-        {
-            printf("  Page boundary size %zu failed\n", sizes[i]);
-            success = 0;
-        }
-        else
-        {
-            memset(ptrs[i], 0xDD, sizes[i]);
-        }
+        p[i] = malloc(sz[i]);
+        if (!p[i]) ok = 0;
+        else memset(p[i], 0x42, sz[i]);
     }
-    
-    ASSERT_TEST(success, "Page boundary allocations succeeded");
-    
+    test(ok, "page boundary ok");
     for (int i = 0; i < 10; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
-/* Test 16: Verify no memory corruption */
-void test_no_corruption(void)
+void t15(void)
 {
-    printf("\n%s Test 16: Memory corruption check\n", TEST_INFO);
-    void *ptrs[30];
-    int no_corruption = 1;
-    
-    /* Allocate and write unique patterns */
+    printf("\n%s T15: corruption check\n", INFO);
+    void *p[30];
+    int ok = 1;
     for (int i = 0; i < 30; i++)
     {
-        ptrs[i] = malloc(128);
-        if (ptrs[i])
+        p[i] = malloc(128);
+        if (p[i])
         {
-            unsigned char *bytes = ptrs[i];
+            unsigned char *b = p[i];
             for (int j = 0; j < 128; j++)
-            {
-                bytes[j] = (i * 7 + j) & 0xFF;
-            }
+                b[j] = (i * 7 + j) & 0xFF;
         }
     }
-    
-    /* Verify patterns are intact */
     for (int i = 0; i < 30; i++)
     {
-        if (ptrs[i])
+        if (p[i])
         {
-            unsigned char *bytes = ptrs[i];
+            unsigned char *b = p[i];
             for (int j = 0; j < 128; j++)
-            {
-                if (bytes[j] != (unsigned char)((i * 7 + j) & 0xFF))
-                {
-                    printf("  Corruption detected in block %d at offset %d\n", i, j);
-                    no_corruption = 0;
-                    break;
-                }
-            }
+                if (b[j] != (unsigned char)((i * 7 + j) & 0xFF))
+                { ok = 0; break; }
         }
     }
-    
-    ASSERT_TEST(no_corruption, "No memory corruption detected");
-    
+    test(ok, "no corruption");
     for (int i = 0; i < 30; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
-/* Test 17: Exact power of 2 sizes */
-void test_power_of_2_sizes(void)
+void t16(void)
 {
-    printf("\n%s Test 17: Power of 2 size allocations\n", TEST_INFO);
-    void *ptrs[12];
-    int success = 1;
-    
+    printf("\n%s T16: pow2 sizes\n", INFO);
+    void *p[12];
+    int ok = 1;
     for (int i = 0; i < 12; i++)
     {
-        size_t size = 1 << i;  /* 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 */
-        ptrs[i] = malloc(size);
-        if (!ptrs[i])
-        {
-            printf("  Power of 2 size %zu failed\n", size);
-            success = 0;
-        }
-        else
-        {
-            memset(ptrs[i], 0xEE, size);
-        }
+        size_t sz = 1 << i;
+        p[i] = malloc(sz);
+        if (!p[i]) ok = 0;
+        else memset(p[i], 0x42, sz);
     }
-    
-    ASSERT_TEST(success, "All power of 2 allocations succeeded");
-    
+    test(ok, "pow2 ok");
     for (int i = 0; i < 12; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
-/* Test 18: Alternating alloc/free */
-void test_alternating_alloc_free(void)
+void t17(void)
 {
-    printf("\n%s Test 18: Alternating allocate/free pattern\n", TEST_INFO);
-    void *ptr1, *ptr2;
-    int success = 1;
-    
+    printf("\n%s T17: alternating\n", INFO);
+    void *p1, *p2;
+    int ok = 1;
     for (int i = 0; i < 50; i++)
     {
-        ptr1 = malloc(64);
-        ptr2 = malloc(128);
-        
-        if (!ptr1 || !ptr2)
+        p1 = malloc(64);
+        p2 = malloc(128);
+        if (!p1 || !p2)
         {
-            success = 0;
-            if (ptr1) free(ptr1);
-            if (ptr2) free(ptr2);
+            ok = 0;
+            if (p1) free(p1);
+            if (p2) free(p2);
             break;
         }
-        
-        memset(ptr1, 0xAA, 64);
-        memset(ptr2, 0xBB, 128);
-        
-        free(ptr1);
-        free(ptr2);
+        memset(p1, 0x42, 64);
+        memset(p2, 0x42, 128);
+        free(p1);
+        free(p2);
     }
-    
-    ASSERT_TEST(success, "50 alternating alloc/free cycles succeeded");
+    test(ok, "50 cycles ok");
 }
 
-/* Test 19: Very large allocation */
-void test_very_large_allocation(void)
+void t18(void)
 {
-    printf("\n%s Test 19: Very large allocation (10MB)\n", TEST_INFO);
-    size_t large_size = 10 * 1024 * 1024;
-    void *ptr = malloc(large_size);
-    
-    int success = (ptr != NULL);
-    if (success)
+    printf("\n%s T18: 10MB\n", INFO);
+    size_t sz = 10 * 1024 * 1024;
+    void *p = malloc(sz);
+    int ok = (p != NULL);
+    if (ok)
     {
-        /* Write to first and last bytes to ensure it's accessible */
-        unsigned char *bytes = ptr;
-        bytes[0] = 0xFF;
-        bytes[large_size - 1] = 0xFF;
-        
-        success = (bytes[0] == 0xFF && bytes[large_size - 1] == 0xFF);
-        free(ptr);
+        unsigned char *b = p;
+        b[0] = 0x42;
+        b[sz - 1] = 0x42;
+        ok = (b[0] == 0x42 && b[sz - 1] == 0x42);
+        free(p);
     }
-    
-    ASSERT_TEST(success, "10MB allocation succeeded and accessible");
+    test(ok, "10MB ok");
 }
 
-/* Test 20: Multiple 64-byte blocks from different pages */
-void test_multiple_pages_64(void)
+void t19(void)
 {
-    printf("\n%s Test 20: Allocate beyond single page capacity\n", TEST_INFO);
-    void *ptrs[128];  /* More than can fit in one page */
-    int success = 1;
-    
+    printf("\n%s T19: multi-page\n", INFO);
+    void *p[128];
+    int ok = 1;
     for (int i = 0; i < 128; i++)
     {
-        ptrs[i] = malloc(64);
-        if (!ptrs[i])
-        {
-            printf("  Allocation %d failed\n", i);
-            success = 0;
-            break;
-        }
-        memset(ptrs[i], i & 0xFF, 64);
+        p[i] = malloc(64);
+        if (!p[i]) { ok = 0; break; }
+        memset(p[i], 0x42, 64);
     }
-    
-    ASSERT_TEST(success, "128 allocations (multi-page) succeeded");
-    
+    test(ok, "128x64 ok");
     for (int i = 0; i < 128; i++)
-    {
-        if (ptrs[i])
-            free(ptrs[i]);
-    }
+        if (p[i]) free(p[i]);
 }
 
 int main(void)
 {
-    printf("\n");
-    printf("=============================\n");
+    printf("\n=============================\n");
     printf("EXTENSIVE TESTSUITE\n");
     printf("=============================\n");
     
-    test_64_allocations_size_64();
-    test_small_sizes();
-    test_large_allocations();
-    test_zero_size();
-    test_free_null();
-    test_alloc_free_realloc();
-    test_stress_many_allocations();
-    test_alignment();
-    test_interleaved_sizes();
-    test_fragmentation();
-    test_boundary_sizes();
-    test_sequential_alloc_free();
-    test_mixed_size_stress();
-    test_page_boundary();
-    test_no_corruption();
-    test_power_of_2_sizes();
-    test_alternating_alloc_free();
-    test_very_large_allocation();
-    test_multiple_pages_64();
+    t1(); t2(); t3(); t4(); t5(); t6(); t7(); t8(); t9(); t10();
+    t11(); t12(); t13(); t14(); t15(); t16(); t17(); t18(); t19();
     
     printf("\n=============================\n");
-    printf("RESULTS\n");
-    printf("==============================\n");
-    printf("Passed: %d\n", tests_passed);
-    printf("Failed: %d\n", tests_failed);
-    printf("Total:  %d\n", tests_passed + tests_failed);
-    printf("==============================\n\n");
+    printf("Passed: %d | Failed: %d\n", pass, fail);
+    printf("=============================\n\n");
     
-    return tests_failed > 0 ? 1 : 0;
+    return fail > 0 ? 1 : 0;
 }

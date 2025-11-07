@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 static size_t next_pow2(size_t n)
 {
     if (n <= 16)
@@ -21,13 +20,10 @@ static size_t next_pow2(size_t n)
     return n;
 }
 
-
 int main(void)
 {
-
     printf("%zu\n\n", next_pow2(129));
     
-    // Test with 128 small allocations to verify both bitmaps work
     void *ptrs[128];
     size_t size = 16;
     
@@ -36,32 +32,35 @@ int main(void)
         ptrs[i] = malloc(size);
         if (!ptrs[i])
         {
-            printf("malloc(%zu) failed at allocation %d\n", size, i);
+            printf("malloc(%zu) failed at %d\n", size, i);
             return 1;
         }
     }
     
-    printf("Successfully allocated 128 blocks of %zu bytes\n", size);
-    printf("First block: %p\n", ptrs[0]);
-    printf("64th block:  %p\n", ptrs[63]);
-    printf("65th block:  %p\n", ptrs[64]);
-    printf("128th block: %p\n", ptrs[127]);
+    printf("Allocated 128 blocks of %zu bytes\n", size);
+    printf("Block 0:   %p\n", ptrs[0]);
+    printf("Block 63:  %p\n", ptrs[63]);
+    printf("Block 64:  %p\n", ptrs[64]);
+    printf("Block 127: %p\n", ptrs[127]);
     
-    // Test writing to blocks in both bitmap ranges
-    memset(ptrs[0], 0xAA, size);
-    memset(ptrs[63], 0xBB, size);
-    memset(ptrs[64], 0xCC, size);
-    memset(ptrs[127], 0xDD, size);
+    memset(ptrs[0], 0x42, size);
+    memset(ptrs[63], 0x42, size);
+    memset(ptrs[64], 0x42, size);
+    memset(ptrs[127], 0x42, size);
     
     unsigned char *b0 = ptrs[0];
     unsigned char *b63 = ptrs[63];
     unsigned char *b64 = ptrs[64];
     unsigned char *b127 = ptrs[127];
     
-    printf("Block 0 first byte:   0x%X\n", b0[0]);
-    printf("Block 63 first byte:  0x%X\n", b63[0]);
-    printf("Block 64 first byte:  0x%X\n", b64[0]);
-    printf("Block 127 first byte: 0x%X\n", b127[0]);
-
+    printf("b0[0]:   0x%X\n", b0[0]);
+    printf("b63[0]:  0x%X\n", b63[0]);
+    printf("b64[0]:  0x%X\n", b64[0]);
+    printf("b127[0]: 0x%X\n", b127[0]);
+    
+    for (int i = 0; i < 128; i++)
+        free(ptrs[i]);
+    
+    printf("Freed all blocks\n");
     return 0;
 }
