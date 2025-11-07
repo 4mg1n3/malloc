@@ -13,8 +13,6 @@ static size_t next_pow2(size_t n)
 {
     if (n <= 16)
         return 16;
-    if (n > 2048)
-        return n;
     n--;
     n |= n >> 1;
     n |= n >> 2;
@@ -114,10 +112,10 @@ void *my_malloc(size_t size)
     }
     page->bitmap |= (1ULL << bit);
 
-    void *vpage = page;
+    void *vpage = page + 1;
     unsigned char *data = vpage;
 
-    void *ptr = (data + sizeof(struct page_header)) + bit * page->block_size;
+    void *ptr = data + bit * page->block_size;
 
     pthread_mutex_unlock(&g_alloc.lock);
     return ptr;

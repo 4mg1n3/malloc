@@ -16,7 +16,7 @@ struct page_header
     size_t block_size;
     size_t blocks_per_page;
     struct page_header *next;
-    char padd[4];
+    char padd[16 - (sizeof(uint64_t) - sizeof(size_t) - sizeof(size_t) - sizeof(void*)) % 16];
 };
 
 struct allocator_state
