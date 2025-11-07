@@ -1,6 +1,6 @@
 #include "malloc.h"
 
-struct allocator_state g_alloc = { NULL, PTHREAD_MUTEX_INITIALIZER };
+struct allocator_struct g_alloc = { NULL, PTHREAD_MUTEX_INITIALIZER };
 
 static uint64_t pf_mask(const struct page_header *page, int bmi)
 {

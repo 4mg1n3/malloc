@@ -1,7 +1,6 @@
+CC=gcc
 NAME=libmalloc.so
-SRCS=src/malloc.c \
-	src/my_malloc.c \
-	src/my_free.c
+SRCS=src/malloc.c src/my_malloc.c src/my_free.c
 OBJS=$(SRCS:.c=.o)
 
 CPPFLAGS=-D_DEFAULT_SOURCE

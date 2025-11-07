@@ -25,7 +25,7 @@ static void test(int cond, const char *name)
 
 void t1(void)
 {
-    printf("\n%s T1: 128x16 dual bitmap\n", INFO);
+    printf("\n%s: 128*16 allocation\n", INFO);
     void *p[128];
     int ok = 1;
     for (int i = 0; i < 128; i++)
@@ -49,7 +49,7 @@ void t1(void)
 
 void t2(void)
 {
-    printf("\n%s T2: small sizes\n", INFO);
+    printf("\n%s: small allocs\n", INFO);
     size_t sz[] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
     void *p[11];
     int ok = 1;
@@ -66,7 +66,7 @@ void t2(void)
 
 void t3(void)
 {
-    printf("\n%s T3: large allocs\n", INFO);
+    printf("\n%s: large allocs\n", INFO);
     size_t sz[] = {2048, 4096, 8192, 16384, 65536, 1024*1024};
     void *p[6];
     int ok = 1;
@@ -83,7 +83,7 @@ void t3(void)
 
 void t4(void)
 {
-    printf("\n%s T4: zero size\n", INFO);
+    printf("\n%s: zero size\n", INFO);
     void *p = malloc(0);
     test(p == NULL, "malloc(0) = NULL");
     printf("%p\n", p);
@@ -91,14 +91,14 @@ void t4(void)
 
 void t5(void)
 {
-    printf("\n%s T5: free NULL\n", INFO);
+    printf("\n%s: free NULL\n", INFO);
     free(NULL);
     test(1, "free(NULL) ok");
 }
 
 void t6(void)
 {
-    printf("\n%s T6: alloc-free-realloc\n", INFO);
+    printf("\n%s: alloc-free-realloc\n", INFO);
     void *p[10];
     for (int i = 0; i < 10; i++)
     {
@@ -123,7 +123,7 @@ void t6(void)
 
 void t7(void)
 {
-    printf("\n%s T7: 1000 allocs\n", INFO);
+    printf("\n%s: 1000 allocs\n", INFO);
     void **p = malloc(1000 * sizeof(void*));
     int cnt = 0;
     for (int i = 0; i < 1000; i++)
@@ -144,13 +144,13 @@ void t7(void)
 
 void t8(void)
 {
-    printf("\n%s T8: alignment\n", INFO);
+    printf("\n%s: alignment\n", INFO);
     void *p[20];
     int ok = 1;
     for (int i = 0; i < 20; i++)
     {
         p[i] = malloc(64);
-        if (p[i] && ((uintptr_t)p[i] % 16 != 0))
+        if (p[i] && ((size_t)p[i] % 16 != 0))
             ok = 0;
     }
     test(ok, "aligned");
@@ -160,7 +160,7 @@ void t8(void)
 
 void t9(void)
 {
-    printf("\n%s T9: interleaved sizes\n", INFO);
+    printf("\n%s: interleaved sizes\n", INFO);
     void *p[100];
     int ok = 1;
     for (int i = 0; i < 100; i++)
@@ -177,7 +177,7 @@ void t9(void)
 
 void t10(void)
 {
-    printf("\n%s T10: fragmentation\n", INFO);
+    printf("\n%s0: fragmentation\n", INFO);
     void *p[50];
     for (int i = 0; i < 50; i++)
     {
@@ -202,7 +202,7 @@ void t10(void)
 
 void t11(void)
 {
-    printf("\n%s T11: boundary sizes\n", INFO);
+    printf("\n%s: boundary sizes\n", INFO);
     size_t sz[] = {15, 16, 17, 63, 64, 65, 127, 128, 129, 1023, 1024, 1025, 2047, 2048, 2049};
     void *p[15];
     int ok = 1;
@@ -219,7 +219,7 @@ void t11(void)
 
 void t12(void)
 {
-    printf("\n%s T12: sequential\n", INFO);
+    printf("\n%s: sequential\n", INFO);
     int ok = 1;
     for (int i = 0; i < 100; i++)
     {
@@ -233,7 +233,7 @@ void t12(void)
 
 void t13(void)
 {
-    printf("\n%s T13: mixed stress\n", INFO);
+    printf("\n%s: mixed stress\n", INFO);
     void *p[200];
     int ok = 1;
     srand(42);
@@ -256,7 +256,7 @@ void t13(void)
 
 void t14(void)
 {
-    printf("\n%s T14: page boundary\n", INFO);
+    printf("\n%s: page boundary\n", INFO);
     void *p[10];
     size_t sz[] = {4090, 4094, 4095, 4096, 4097, 8190, 8192, 8194, 16384, 32768};
     int ok = 1;
@@ -273,7 +273,7 @@ void t14(void)
 
 void t15(void)
 {
-    printf("\n%s T15: corruption check\n", INFO);
+    printf("\n%s: corruption check\n", INFO);
     void *p[30];
     int ok = 1;
     for (int i = 0; i < 30; i++)
@@ -303,7 +303,7 @@ void t15(void)
 
 void t16(void)
 {
-    printf("\n%s T16: pow2 sizes\n", INFO);
+    printf("\n%s: pow2 sizes\n", INFO);
     void *p[12];
     int ok = 1;
     for (int i = 0; i < 12; i++)
@@ -320,7 +320,7 @@ void t16(void)
 
 void t17(void)
 {
-    printf("\n%s T17: alternating\n", INFO);
+    printf("\n%s: alternating\n", INFO);
     void *p1, *p2;
     int ok = 1;
     for (int i = 0; i < 50; i++)
@@ -344,8 +344,8 @@ void t17(void)
 
 void t18(void)
 {
-    printf("\n%s T18: 10MB\n", INFO);
-    size_t sz = 10 * 1024 * 1024;
+    printf("\n%s: 100MB\n", INFO);
+    size_t sz = 100 * 1024 * 1024;
     void *p = malloc(sz);
     int ok = (p != NULL);
     if (ok)
@@ -356,12 +356,12 @@ void t18(void)
         ok = (b[0] == 0x42 && b[sz - 1] == 0x42);
         free(p);
     }
-    test(ok, "10MB ok");
+    test(ok, "100MB ok");
 }
 
 void t19(void)
 {
-    printf("\n%s T19: multi-page\n", INFO);
+    printf("\n%s: lots of pages\n", INFO);
     void *p[128];
     int ok = 1;
     for (int i = 0; i < 128; i++)
@@ -370,7 +370,7 @@ void t19(void)
         if (!p[i]) { ok = 0; break; }
         memset(p[i], 0x42, 64);
     }
-    test(ok, "128x64 ok");
+    test(ok, "128*64 ok");
     for (int i = 0; i < 128; i++)
         if (p[i]) free(p[i]);
 }
@@ -380,13 +380,10 @@ int main(void)
     printf("\n=============================\n");
     printf("EXTENSIVE TESTSUITE\n");
     printf("=============================\n");
-    
     t1(); t2(); t3(); t4(); t5(); t6(); t7(); t8(); t9(); t10();
     t11(); t12(); t13(); t14(); t15(); t16(); t17(); t18(); t19();
-    
     printf("\n=============================\n");
     printf("Passed: %d | Failed: %d\n", pass, fail);
     printf("=============================\n\n");
-    
     return fail > 0 ? 1 : 0;
 }

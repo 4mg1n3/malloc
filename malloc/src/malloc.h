@@ -8,8 +8,6 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#define ALIGNMENT (sizeof(long double))
-
 struct page_header
 {
     uint64_t bitmap;
@@ -20,13 +18,13 @@ struct page_header
     char padd[16 - (sizeof(uint64_t) - sizeof(uint64_t) - sizeof(size_t) - sizeof(size_t) - sizeof(void*)) % 16];
 };
 
-struct allocator_state
+struct allocator_struct
 {
     struct page_header *pages;
     pthread_mutex_t lock;
 };
 
-extern struct allocator_state g_alloc;
+extern struct allocator_struct g_alloc;
 
 void *my_malloc(size_t size);
 void my_free(void *ptr);
