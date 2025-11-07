@@ -63,35 +63,5 @@ int main(void)
     printf("Block 64 first byte:  0x%X\n", b64[0]);
     printf("Block 127 first byte: 0x%X\n", b127[0]);
 
-    size_t n = 8;
-    size_t s = 8;
-    void *cptr = calloc(n, s);
-    puts("a\n\n");
-    if (!cptr)
-    {
-        printf("calloc(%zu, %zu) failed\n", n, s);
-        free(ptr);
-        return 1;
-    }
-
-    printf("calloc(%zu, %zu) returned %p\n", n, s, cptr);
-
-    int zero_ok = 1;
-    unsigned char *cbytes = cptr;
-    for (size_t i = 0; i < n * s; i++)
-    {
-        if (cbytes[i] != 0)
-        {
-            zero_ok = 0;
-            break;
-        }
-    }
-    printf("calloc memory is %sinitialized to zero\n", zero_ok ? "" : "NOT ");
-
-    free(ptr);
-    free(ptr2);
-    free(ptr3);
-    free(cptr);
-    printf("Freed all blocks.\n");
     return 0;
 }
