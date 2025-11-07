@@ -26,24 +26,42 @@ int main(void)
 {
 
     printf("%zu\n\n", next_pow2(129));
-    size_t size = 64;
-    void *ptr = malloc(size);
-    void *ptr2 = malloc(size);
-    void *ptr3 = malloc(256);
-    if (!ptr || !ptr2 || !ptr3)
+    
+    // Test with 128 small allocations to verify both bitmaps work
+    void *ptrs[128];
+    size_t size = 16;
+    
+    for (int i = 0; i < 128; i++)
     {
-        printf("malloc(%zu) failed\n", size);
-        return 1;
+        ptrs[i] = malloc(size);
+        if (!ptrs[i])
+        {
+            printf("malloc(%zu) failed at allocation %d\n", size, i);
+            return 1;
+        }
     }
-
-    printf("malloc(%zu) returned %p\n", size, ptr);
-    printf("malloc(%zu) returned %p\n", size, ptr2);
-    printf("malloc(%zu) returned %p\n", size, ptr3);
-
-    memset(ptr, 0xAB, size);
-    unsigned char *bytes = ptr;
-    printf("First byte: 0x%X\n", bytes[0]);
-    printf("Last byte:  0x%X\n", bytes[size - 1]);
+    
+    printf("Successfully allocated 128 blocks of %zu bytes\n", size);
+    printf("First block: %p\n", ptrs[0]);
+    printf("64th block:  %p\n", ptrs[63]);
+    printf("65th block:  %p\n", ptrs[64]);
+    printf("128th block: %p\n", ptrs[127]);
+    
+    // Test writing to blocks in both bitmap ranges
+    memset(ptrs[0], 0xAA, size);
+    memset(ptrs[63], 0xBB, size);
+    memset(ptrs[64], 0xCC, size);
+    memset(ptrs[127], 0xDD, size);
+    
+    unsigned char *b0 = ptrs[0];
+    unsigned char *b63 = ptrs[63];
+    unsigned char *b64 = ptrs[64];
+    unsigned char *b127 = ptrs[127];
+    
+    printf("Block 0 first byte:   0x%X\n", b0[0]);
+    printf("Block 63 first byte:  0x%X\n", b63[0]);
+    printf("Block 64 first byte:  0x%X\n", b64[0]);
+    printf("Block 127 first byte: 0x%X\n", b127[0]);
 
     size_t n = 8;
     size_t s = 8;
