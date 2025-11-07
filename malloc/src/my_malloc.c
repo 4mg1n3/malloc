@@ -36,9 +36,7 @@ static struct page_header *new_page(size_t block_size)
         (pagesize - sizeof(struct page_header)) / block_size;
     if (page->blocks_per_page > 64)
         page->blocks_per_page = 64;
-    page->bitmap = UINT64_MAX;
-    for (size_t bit = 0; bit < page->blocks_per_page; bit++)
-        page->bitmap ^= (1 << bit);
+    page->bitmap = 0;
     page->next = g_alloc.pages;
     g_alloc.pages = page;
 
@@ -107,7 +105,7 @@ void *my_malloc(size_t size)
     void *vpage = page;
     char *endofpage = vpage;
     endofpage += 4096;
-    endofpage -= (page->blocks_per_page + 1 - bit) * (page->block_size / 8);
+    endofpage -= (page->blocks_per_page + 1 - bit) * (page->block_size);
 
     void *ptr = endofpage;
 

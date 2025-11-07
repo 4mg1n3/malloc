@@ -26,10 +26,10 @@ int main(void)
 {
 
     printf("%zu\n", next_pow2(129));
-    size_t size = 16;
+    size_t size = 64;
     void *ptr = malloc(size);
     void *ptr2 = malloc(size);
-    void *ptr3 = malloc(size);
+    void *ptr3 = malloc(256);
     if (!ptr || !ptr2 || !ptr3)
     {
         printf("malloc(%zu) failed\n", size);
@@ -45,9 +45,10 @@ int main(void)
     printf("First byte: 0x%X\n", bytes[0]);
     printf("Last byte:  0x%X\n", bytes[size - 1]);
 
-    size_t n = 10;
+    size_t n = 8;
     size_t s = 8;
     void *cptr = calloc(n, s);
+    puts("a\n\n");
     if (!cptr)
     {
         printf("calloc(%zu, %zu) failed\n", n, s);
