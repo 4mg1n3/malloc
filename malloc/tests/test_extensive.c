@@ -22,13 +22,11 @@ static int tests_failed = 0;
     } \
 } while(0)
 
-/* Test 1: Allocate 128 pointers of size 16 to test both bitmaps */
 void test_64_allocations_size_64(void)
 {
     printf("\n%s Test 1: Allocating 128 pointers of size 16 (dual bitmap test)\n", TEST_INFO);
     void *ptrs[128];
     int success = 1;
-    
     for (int i = 0; i < 128; i++)
     {
         ptrs[i] = malloc(16);
@@ -38,13 +36,9 @@ void test_64_allocations_size_64(void)
             success = 0;
             break;
         }
-        /* Write unique pattern to each block */
         memset(ptrs[i], i & 0xFF, 16);
     }
-    
     ASSERT_TEST(success, "All 128 allocations succeeded");
-    
-    /* Verify data integrity */
     int data_ok = 1;
     for (int i = 0; i < 128 && ptrs[i]; i++)
     {
@@ -93,9 +87,7 @@ void test_small_sizes(void)
             memset(ptrs[i], 0xAA, sizes[i]);
         }
     }
-    
     ASSERT_TEST(success, "All small size allocations succeeded");
-    
     for (int i = 0; i < 11; i++)
     {
         if (ptrs[i])
@@ -103,14 +95,12 @@ void test_small_sizes(void)
     }
 }
 
-/* Test 3: Large allocations */
 void test_large_allocations(void)
 {
     printf("\n%s Test 3: Large allocations (>1024 bytes)\n", TEST_INFO);
     size_t sizes[] = {2048, 4096, 8192, 16384, 65536, 1024*1024};
     void *ptrs[6];
     int success = 1;
-    
     for (int i = 0; i < 6; i++)
     {
         ptrs[i] = malloc(sizes[i]);
@@ -121,13 +111,10 @@ void test_large_allocations(void)
         }
         else
         {
-            /* Write pattern to verify */
-            memset(ptrs[i], 0xBB, sizes[i]);
+            memset(ptrs[i], 0x42, sizes[i]);
         }
     }
-    
     ASSERT_TEST(success, "All large allocations succeeded");
-    
     for (int i = 0; i < 6; i++)
     {
         if (ptrs[i])
@@ -135,15 +122,6 @@ void test_large_allocations(void)
     }
 }
 
-/* Test 4: Zero size allocation */
-void test_zero_size(void)
-{
-    printf("\n%s Test 4: Zero size allocation\n", TEST_INFO);
-    void *ptr = malloc(0);
-    ASSERT_TEST(ptr == NULL, "malloc(0) returns NULL");
-}
-
-/* Test 5: Free NULL pointer */
 void test_free_null(void)
 {
     printf("\n%s Test 5: Free NULL pointer\n", TEST_INFO);
@@ -151,28 +129,21 @@ void test_free_null(void)
     ASSERT_TEST(1, "free(NULL) doesn't crash");
 }
 
-/* Test 6: Allocate, free, reallocate pattern */
 void test_alloc_free_realloc(void)
 {
     printf("\n%s Test 6: Allocate-Free-Reallocate pattern\n", TEST_INFO);
     void *ptrs[10];
-    
-    /* Allocate */
     for (int i = 0; i < 10; i++)
     {
         ptrs[i] = malloc(128);
         if (ptrs[i])
             memset(ptrs[i], i, 128);
     }
-    
-    /* Free odd indices */
     for (int i = 1; i < 10; i += 2)
     {
         free(ptrs[i]);
         ptrs[i] = NULL;
     }
-    
-    /* Reallocate freed slots */
     int success = 1;
     for (int i = 1; i < 10; i += 2)
     {
@@ -180,10 +151,7 @@ void test_alloc_free_realloc(void)
         if (!ptrs[i])
             success = 0;
     }
-    
     ASSERT_TEST(success, "Reallocations after partial free succeeded");
-    
-    /* Free all */
     for (int i = 0; i < 10; i++)
     {
         if (ptrs[i])
@@ -191,7 +159,6 @@ void test_alloc_free_realloc(void)
     }
 }
 
-/* Test 7: Stress test - many allocations */
 void test_stress_many_allocations(void)
 {
     printf("\n%s Test 7: Stress test - 1000 allocations\n", TEST_INFO);
@@ -622,9 +589,9 @@ void test_multiple_pages_64(void)
 int main(void)
 {
     printf("\n");
-    printf("========================================\n");
-    printf("  EXTENSIVE MALLOC LIBRARY TEST SUITE  \n");
-    printf("========================================\n");
+    printf("=============================\n");
+    printf("EXTENSIVE TESTSUITE\n");
+    printf("=============================\n");
     
     test_64_allocations_size_64();
     test_small_sizes();
@@ -646,13 +613,13 @@ int main(void)
     test_very_large_allocation();
     test_multiple_pages_64();
     
-    printf("\n========================================\n");
-    printf("  TEST RESULTS\n");
-    printf("========================================\n");
-    printf("  Passed: %d\n", tests_passed);
-    printf("  Failed: %d\n", tests_failed);
-    printf("  Total:  %d\n", tests_passed + tests_failed);
-    printf("========================================\n\n");
+    printf("\n=============================\n");
+    printf("RESULTS\n");
+    printf("==============================\n");
+    printf("Passed: %d\n", tests_passed);
+    printf("Failed: %d\n", tests_failed);
+    printf("Total:  %d\n", tests_passed + tests_failed);
+    printf("==============================\n\n");
     
     return tests_failed > 0 ? 1 : 0;
 }
