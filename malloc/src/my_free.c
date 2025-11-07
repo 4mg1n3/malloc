@@ -30,8 +30,10 @@ void my_free(void *ptr)
 
         if (bit < 64)
             page->bitmap &= ~(1ULL << bit);
+        else
+            page->bitmap2 &= ~(1ULL << (bit - 64));
 
-        if (page->bitmap == 0)
+        if (page->bitmap == 0 && page->bitmap2 == 0)
         {
             if (prev)
                 prev->next = page->next;

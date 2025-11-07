@@ -13,10 +13,11 @@
 struct page_header
 {
     uint64_t bitmap;
+    uint64_t bitmap2;
     size_t block_size;
     size_t blocks_per_page;
     struct page_header *next;
-    char padd[16 - (sizeof(uint64_t) - sizeof(size_t) - sizeof(size_t) - sizeof(void*)) % 16];
+    char padd[16 - (sizeof(uint64_t) - sizeof(uint64_t) - sizeof(size_t) - sizeof(size_t) - sizeof(void*)) % 16];
 };
 
 struct allocator_state

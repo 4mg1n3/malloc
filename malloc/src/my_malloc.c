@@ -2,11 +2,22 @@
 
 struct allocator_state g_alloc = { NULL, PTHREAD_MUTEX_INITIALIZER };
 
-static uint64_t pf_mask(const struct page_header *page)
+static uint64_t pf_mask(const struct page_header *page, int bmi)
 {
-    if (page->blocks_per_page >= 64)
-        return UINT64_MAX;
-    return (1ULL << page->blocks_per_page) - 1ULL;
+    if (bmi == 0)
+    {
+        if (page->blocks_per_page >= 64)
+            return UINT64_MAX;
+        return (1ULL << page->blocks_per_page) - 1ULL;
+    }
+    else
+    {
+        if (page->blocks_per_page <= 64)
+            return 0;
+        if (page->blocks_per_page <= 128)
+            return UINT64_MAX;
+        return (1ULL << (page->blocks_per_page - 64)) - 1ULL;
+    }
 }
 
 static size_t next_pow2(size_t n)
@@ -39,9 +50,10 @@ static struct page_header *new_page(size_t block_size)
     page->block_size = block_size;
     page->blocks_per_page =
         (pagesize - sizeof(struct page_header)) / block_size;
-    if (page->blocks_per_page > 64)
-        page->blocks_per_page = 64;
+    if (page->blocks_per_page > 128)
+        page->blocks_per_page = 128;
     page->bitmap = 0;
+    page->bitmap2 = 0;
     page->next = g_alloc.pages;
     g_alloc.pages = page;
 
@@ -76,8 +88,8 @@ void *my_malloc(size_t size)
         return alloc_big(size);
 
     size_t block_size = next_pow2(size);
-    if (block_size < 64)
-        block_size = 64;
+    if (block_size < 32)
+        block_size = 32;
 
     pthread_mutex_lock(&g_alloc.lock);
 
@@ -86,8 +98,9 @@ void *my_malloc(size_t size)
     {
         if (page->block_size == block_size)
         {
-            uint64_t mask = pf_mask(page);
-            if ((page->bitmap & mask) != mask)
+            uint64_t mask = pf_mask(page, 0);
+            uint64_t mask2 = pf_mask(page, 1);
+            if ((page->bitmap & mask) != mask || (page->bitmap2 & mask2) != mask2)
                 break;
         }
         page = page->next;
@@ -106,11 +119,22 @@ void *my_malloc(size_t size)
     unsigned bit = 0;
     while (bit < page->blocks_per_page)
     {
-        if (!(page->bitmap & (1ULL << bit)))
-            break;
+        if (bit < 64)
+        {
+            if (!(page->bitmap & (1ULL << bit)))
+                break;
+        }
+        else
+        {
+            if (!(page->bitmap2 & (1ULL << (bit - 64))))
+                break;
+        }
         bit++;
     }
-    page->bitmap |= (1ULL << bit);
+    if (bit < 64)
+        page->bitmap |= (1ULL << bit);
+    else
+        page->bitmap2 |= (1ULL << (bit - 64));
 
     void *vpage = page + 1;
     unsigned char *data = vpage;

@@ -26,12 +26,12 @@ static int tests_failed = 0;
 void test_64_allocations_size_64(void)
 {
     printf("\n%s Test 1: Allocating 64 pointers of size 64\n", TEST_INFO);
-    void *ptrs[64];
+    void *ptrs[128];
     int success = 1;
     
-    for (int i = 0; i < 64; i++)
+    for (int i = 0; i < 128; i++)
     {
-        ptrs[i] = malloc(64);
+        ptrs[i] = malloc(32);
         if (!ptrs[i])
         {
             printf("  Allocation %d failed\n", i);
@@ -39,19 +39,19 @@ void test_64_allocations_size_64(void)
             break;
         }
         /* Write unique pattern to each block */
-        memset(ptrs[i], i & 0xFF, 64);
+        memset(ptrs[i], i & 0xF, 32);
     }
     
     ASSERT_TEST(success, "All 64 allocations succeeded");
     
     /* Verify data integrity */
     int data_ok = 1;
-    for (int i = 0; i < 64 && ptrs[i]; i++)
+    for (int i = 0; i < 128 && ptrs[i]; i++)
     {
         unsigned char *bytes = ptrs[i];
-        for (int j = 0; j < 64; j++)
+        for (int j = 0; j < 128; j++)
         {
-            if (bytes[j] != (unsigned char)(i & 0xFF))
+            if (bytes[j] != (unsigned char)(i & 0xF))
             {
                 data_ok = 0;
                 break;
@@ -62,7 +62,7 @@ void test_64_allocations_size_64(void)
     ASSERT_TEST(data_ok, "Data integrity maintained across all 64 blocks");
     
     /* Free all */
-    for (int i = 0; i < 64; i++)
+    for (int i = 0; i < 128; i++)
     {
         if (ptrs[i])
             free(ptrs[i]);
