@@ -14,7 +14,7 @@ static uint64_t pf_mask(const struct page_header *page, int bmi)
     {
         if (page->blocks_per_page <= 64)
             return 0;
-        if (page->blocks_per_page >= 128)
+        if (page->blocks_per_page <= 128)
             return UINT64_MAX;
         return (1ULL << (page->blocks_per_page - 64)) - 1ULL;
     }
